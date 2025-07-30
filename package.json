@@ -1,0 +1,2 @@
+npm init -y
+npm install next react react-dom @react-three/fiber @react-three/drei lucide-react
