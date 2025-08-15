@@ -28,6 +28,6 @@
     "eslint-config-next": "^14.2.5"
   },
   "engines": {
-    "node": "20.x"  // Updated from 18.x
+    "node": "20.x"
   }
 }
