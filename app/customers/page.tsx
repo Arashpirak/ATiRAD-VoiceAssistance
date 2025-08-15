@@ -2,10 +2,10 @@
 
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Html, Stars } from "@react-three/drei"
-import { Suspense } from "react"
-import { ArrowLeft, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Suspense } from "react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 // Customer data with their websites and 3D positions
 const customerData = [
