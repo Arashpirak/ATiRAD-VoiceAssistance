@@ -1,32 +1,33 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { StarWarsChat } from "@/components/star-wars-chat"
-import { conversationStore, type ChatMessage } from "@/utils/conversation-store"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { StarWarsChat } from "@/components/star-wars-chat";
+import { conversationStore, type ChatMessage } from "@/utils/conversation-store";
 
 interface ChatboxWindowProps {
-  onContinue?: () => void
+  onContinue?: () => void;
 }
 
 export function ChatboxWindow({ onContinue }: ChatboxWindowProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages())
+  const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages());
+  const [isTyping, setIsTyping] = useState(false); // Added to manage typing state
 
   // Subscribe to conversation updates
   useEffect(() => {
     const unsubscribe = conversationStore.subscribe((newMessages) => {
-      setMessages(newMessages)
-    })
+      setMessages(newMessages);
+    });
 
-    return unsubscribe
-  }, [])
+    return unsubscribe;
+  }, []);
 
   return (
     <div className="text-center p-8 max-w-4xl mx-auto">
       <h2 className="text-3xl font-bold text-[#08075C] mb-6">AI Conversation</h2>
 
       <div className="mb-6">
-        <StarWarsChat showControls={true} />
+        <StarWarsChat showControls={true} messages={messages} isTyping={isTyping} />
       </div>
 
       <div className="bg-gradient-to-r from-[#01ADEF]/10 to-[#08075C]/10 rounded-2xl p-4 border border-[#01ADEF]/20">
@@ -42,5 +43,5 @@ export function ChatboxWindow({ onContinue }: ChatboxWindowProps) {
         </Button>
       )}
     </div>
-  )
+  );
 }
