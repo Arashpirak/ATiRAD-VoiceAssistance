@@ -114,124 +114,82 @@ export default function VoiceAssistant() {
   }, [])
 
   const startVolumeMonitoring = () => {
-    if (!analyserRef.current) return
-
-    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
-
-    const monitor = () => {
-      if (!analyserRef.current) return
-
-      analyserRef.current.getByteFrequencyData(dataArray)
-      const average = dataArray.reduce((a, b) => a + b) / dataArray.length
-      const normalizedVolume = Math.min(average / 50, 1) // Normalize to 0-1
-
-      setVolumeLevel(normalizedVolume)
-
-      if (isRecordingRef.current) {
-        setIsListening(average > 15) // Threshold for voice detection during recording
+    const updateVolume = () => {
+      if (analyserRef.current) {
+        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
+        analyserRef.current.getByteFrequencyData(dataArray)
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
+        setVolumeLevel(Math.min(1, average / 128))
       }
-
-      animationFrameRef.current = requestAnimationFrame(monitor)
+      animationFrameRef.current = requestAnimationFrame(updateVolume)
     }
-
-    monitor()
-  }
-
-  const playIntroMessage = async () => {
-    const message = "Hi, my name is Arash, what is your name? You could hold the Mic icon in corner to speak with me."
-
-    // Add AI message to chat
-    addMessage(message, "ai")
-
-    if (isMuted) return
-
-    const utterance = new SpeechSynthesisUtterance(message)
-    utterance.rate = 0.9
-    utterance.pitch = 1
-    utterance.volume = 0.8
-
-    // Monitor AI voice volume
-    const monitorAiVolume = () => {
-      if (speechSynthesis.speaking) {
-        setAiVolumeLevel(Math.random() * 0.8 + 0.2) // Simulate AI voice volume
-        requestAnimationFrame(monitorAiVolume)
-      } else {
-        setAiVolumeLevel(0)
-      }
-    }
-
-    return new Promise<void>((resolve) => {
-      utterance.onstart = () => monitorAiVolume()
-      utterance.onend = () => {
-        setAiVolumeLevel(0)
-        resolve()
-      }
-      speechSynthesis.speak(utterance)
-    })
+    animationFrameRef.current = requestAnimationFrame(updateVolume)
   }
 
   const startRecording = () => {
-    if (!streamRef.current || recordingState !== "ready") return
+    if (recordingState !== "ready" || !streamRef.current) return
 
-    isRecordingRef.current = true
     setRecordingState("recording")
     setProgress(0)
+    setIsListening(false)
     audioChunksRef.current = []
 
-    // Setup media recorder
-    mediaRecorderRef.current = new MediaRecorder(streamRef.current)
+    const mediaRecorder = new MediaRecorder(streamRef.current)
+    mediaRecorderRef.current = mediaRecorder
 
-    mediaRecorderRef.current.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        audioChunksRef.current.push(event.data)
+    mediaRecorder.start(250) // Collect chunks every 250ms for better VAD
+
+    mediaRecorder.ondataavailable = (e) => {
+      audioChunksRef.current.push(e.data)
+      if (e.data.size > 0) {
+        processVoiceActivity(e.data)
       }
     }
 
-    mediaRecorderRef.current.onstop = async () => {
-      const audioBlob = new Blob(audioChunksRef.current, { type: "audio/wav" })
-      await processAudio(audioBlob)
-    }
+    mediaRecorder.onstop = processAudio
 
-    mediaRecorderRef.current.start()
-
-    // Progress timer (10 seconds)
-    let currentProgress = 0
+    // Progress timer (max 30 seconds)
     progressIntervalRef.current = setInterval(() => {
-      currentProgress += 1
-      setProgress(currentProgress)
-
-      if (currentProgress >= 100) {
-        stopRecording()
-      }
+      setProgress((prev) => {
+        if (prev >= 100) {
+          stopRecording()
+          return 100
+        }
+        return prev + 100 / 300 // 100% in 30 seconds (300 * 100ms = 30s)
+      })
     }, 100)
+
+    isRecordingRef.current = true
   }
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecordingRef.current) {
-      isRecordingRef.current = false
-      mediaRecorderRef.current.stop()
-      setRecordingState("processing")
-      setIsListening(false)
+    if (recordingState !== "recording" || !mediaRecorderRef.current) return
 
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current)
-      }
+    mediaRecorderRef.current.stop()
+    if (progressIntervalRef.current) {
+      clearInterval(progressIntervalRef.current)
+    }
+    setRecordingState("processing")
+    isRecordingRef.current = false
+  }
+
+  const processVoiceActivity = async (blob: Blob) => {
+    // Simulate VAD - in real implementation, use WebAudio API or send to server for VAD
+    // For demo, assume voice detected after 500ms
+    if (!isListening && audioChunksRef.current.length > 2) {
+      setIsListening(true)
     }
   }
 
-  const processAudio = async (audioBlob: Blob) => {
+  const processAudio = async () => {
+    setRecordingState("processing")
+
+    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" })
+    const formData = new FormData()
+    formData.append("audio", audioBlob)
+
     try {
-      setRecordingState("processing")
-
-      // Add user message (simulated transcription)
-      addMessage("Hello, my name is John. Nice to meet you!", "user")
-
-      const formData = new FormData()
-      formData.append("audio", audioBlob, "recording.wav")
-
       setRecordingState("waiting-llm")
-      setIsTyping(true)
-
       const response = await fetch("/api/process-voice", {
         method: "POST",
         body: formData,
@@ -239,279 +197,135 @@ export default function VoiceAssistant() {
 
       const data = await response.json()
 
-      setRecordingState("generating-voice")
-
       if (data.success) {
-        await playResponse(data.response)
+        addMessage(data.response, "ai")
+        setRecordingState("generating-voice")
+
+        // Simulate voice generation and playback
+        await new Promise((resolve) => setTimeout(resolve, 2000))
+        setRecordingState("playing-response")
+        await new Promise((resolve) => setTimeout(resolve, 3000)) // Simulate playback time
+
+        setRecordingState("ready")
       } else {
-        await playResponse("I'm sorry, I couldn't process your request. Please try again.")
+        addMessage("Sorry, I couldn't process that. Please try again.", "ai")
+        setRecordingState("ready")
       }
     } catch (error) {
-      console.error("Error processing audio:", error)
-      await playResponse("There was an error processing your request. Please try again.")
-    }
-
-    setIsTyping(false)
-    setRecordingState("ready")
-    setProgress(0)
-  }
-
-  const playResponse = async (text: string) => {
-    // Add AI response to chat
-    addMessage(text, "ai")
-
-    if (isMuted) {
+      console.error("Error:", error)
+      addMessage("An error occurred. Please try again.", "ai")
       setRecordingState("ready")
-      return
-    }
-
-    setRecordingState("playing-response")
-
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    utterance.pitch = 1
-    utterance.volume = 0.8
-
-    // Monitor AI voice volume
-    const monitorAiVolume = () => {
-      if (speechSynthesis.speaking) {
-        setAiVolumeLevel(Math.random() * 0.8 + 0.2) // Simulate AI voice volume
-        requestAnimationFrame(monitorAiVolume)
-      } else {
-        setAiVolumeLevel(0)
-      }
-    }
-
-    return new Promise<void>((resolve) => {
-      utterance.onstart = () => monitorAiVolume()
-      utterance.onend = () => {
-        setAiVolumeLevel(0)
-        setRecordingState("ready")
-        resolve()
-      }
-      speechSynthesis.speak(utterance)
-    })
-  }
-
-  const getStatusText = () => {
-    switch (recordingState) {
-      case "requesting-permission":
-        return "Requesting microphone permission..."
-      case "ready":
-        return "Ready to listen - Hold the microphone to speak"
-      case "recording":
-        return isListening ? "Listening to your voice..." : "Speak now, I'm listening"
-      case "processing":
-        return "Processing your recorded voice..."
-      case "waiting-llm":
-        return "Sending to AI brain for analysis..."
-      case "generating-voice":
-        return "Generating voice response..."
-      case "playing-response":
-        return "Playing AI response..."
-      default:
-        return "Initializing voice assistant..."
     }
   }
 
-  // Generate volume waves next to mic button
+  const playIntroMessage = async () => {
+    // Simulate intro
+    setIsTyping(true)
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    addMessage("Hello! I'm Arash, your AI voice assistant. Hold the microphone button to speak.", "ai")
+    setIsTyping(false)
+  }
+
   const generateVolumeWaves = () => {
     const waves = []
-    const waveCount = 8 // Increased from 4 to 8
-
-    for (let i = 0; i < waveCount; i++) {
-      const isActive = volumeLevel > (i + 1) * 0.125 // Adjusted threshold
-      const height = isActive ? 15 + volumeLevel * 40 + Math.sin(Date.now() * 0.01 + i) * 8 : 6
-      const opacity = isActive ? 0.9 : 0.2
-
+    for (let i = 0; i < 5; i++) {
+      const height = Math.max(8, Math.min(64, volumeLevel * 64 * (i + 1) / 5))
       waves.push(
         <div
           key={i}
-          className="bg-white rounded-full transition-all duration-150"
-          style={{
-            width: "2px",
-            height: `${height}px`,
-            marginRight: "2px",
-            opacity: opacity,
-            boxShadow: isActive ? "0 0 8px rgba(1, 173, 239, 0.6)" : "none",
-          }}
-        />,
+          className="w-1 bg-[#01ADEF] rounded-full mx-0.5 transition-all duration-100"
+          style={{ height: `${height}px` }}
+        />
       )
     }
-
     return waves
   }
 
-  // Generate AI voice volume bars (different style) - 50% wider
-  const generateAiVolumeWaves = () => {
-    const waves = []
-    const waveCount = 8 // Increased count for wider bar
-
-    for (let i = 0; i < waveCount; i++) {
-      const isActive = aiVolumeLevel > (i + 1) * 0.125
-      const height = isActive ? 20 + aiVolumeLevel * 30 + Math.sin(Date.now() * 0.015 + i) * 5 : 8
-      const opacity = isActive ? 0.9 : 0.3
-
-      waves.push(
-        <div
-          key={i}
-          className="bg-gradient-to-t from-[#01ADEF] to-white rounded-t-full transition-all duration-200"
-          style={{
-            width: "4px",
-            height: `${height}px`,
-            marginRight: "3px",
-            opacity: opacity,
-            boxShadow: isActive ? "0 0 10px rgba(1, 173, 239, 0.8)" : "none",
-          }}
-        />,
-      )
-    }
-
-    return waves
+  const toggleMute = () => {
+    setIsMuted(!isMuted)
+    // Implement mute logic for audio playback
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white overflow-hidden relative">
-      {/* Voice Interface Overlay */}
-      <div className="fixed inset-0 z-20 pointer-events-none">
-        {/* AI Voice Volume Bar - Top Left */}
-        <div className="absolute top-8 left-8 flex flex-col items-center gap-2 pointer-events-auto">
-          <span className="text-white text-xs font-medium">AI Voice</span>
-          <div className="flex items-end h-12 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 px-4 py-2">
-            {generateAiVolumeWaves()}
-          </div>
-        </div>
-
-        {/* Header (title box, left-centered) */}
-        <div className="absolute top-8 left-48 pointer-events-auto">
-          <div className="bg-white/95 backdrop-blur-md rounded-xl p-6 shadow-2xl border border-[#01ADEF]/20">
-            <h1 className="text-3xl font-bold text-[#08075C] mb-2">AI Voice Assistant</h1>
-            <p className="text-[#01ADEF] font-medium">Intelligent voice-powered chatbot service</p>
-          </div>
-        </div>
-
-        {/* Top-right controls */}
-        <div className="absolute top-8 right-8 flex gap-4 pointer-events-auto">
-          {/* Mute / Un-mute */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsMuted(!isMuted)}
-            className="bg-white/95 border-[#01ADEF]/30 text-[#08075C] hover:bg-white shadow-xl"
-          >
-            {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-          </Button>
-
-          {/* Customers page button */}
+    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white relative overflow-hidden">
+      <div className="relative w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
+        {/* Top Left Controls */}
+        <div className="absolute top-8 left-8 flex items-center gap-4 pointer-events-auto">
+          {/* Customers Page Link */}
           <Link href="/customers">
-            <Button
-              variant="outline"
-              size="icon"
-              className="bg-white/95 border-[#01ADEF]/30 text-[#08075C] hover:bg-white shadow-xl"
-            >
-              <Users size={20} />
+            <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm flex items-center gap-2">
+              <Users size={16} />
+              Our Customers
             </Button>
           </Link>
+
+          {/* Mute Button */}
+          <Button
+            onClick={toggleMute}
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20 rounded-full backdrop-blur-sm"
+          >
+            {isMuted ? <VolumeX size={24} /> : <Volume2 size={24} />}
+          </Button>
+        </div>
+
+        {/* Sign In Button - Top Right */}
+        <div className="absolute top-8 right-8 pointer-events-auto">
+          <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
+            Sign In
+          </Button>
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-col items-center justify-center h-screen px-8">
-          <div className="text-center max-w-4xl">
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-12 shadow-2xl border border-[#01ADEF]/20 mb-8">
-              <h2 className="text-6xl font-bold text-[#08075C] mb-6">Hello, I'm Arash</h2>
-              <p className="text-2xl text-[#01ADEF] mb-8 font-medium">Your AI Voice Assistant</p>
-
-              {/* Show chat or welcome message */}
-              {showChat ? (
-                <div className="mb-6">
-                  <StarWarsChat messages={messages} isTyping={isTyping} />
-                </div>
-              ) : (
-                <div className="bg-gradient-to-r from-[#01ADEF]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#01ADEF]/20">
-                  <p className="text-xl text-[#08075C] mb-4">What's your name? Hold the microphone and tell me!</p>
-                  <p className="text-[#01ADEF]">
-                    I can help you with information, answer questions, or assist with various tasks.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Sign In Button */}
-            <div className="flex justify-center">
-              <Link href="/pathway">
-                <Button className="bg-[#01ADEF] hover:bg-[#0194D1] text-white px-8 py-3 rounded-full text-lg font-semibold shadow-xl border-2 border-white/20 pointer-events-auto">
-                  Sign In
-                </Button>
-              </Link>
-            </div>
-          </div>
+        <div className="text-center max-w-3xl pointer-events-none">
+          <h1 className="text-5xl font-bold text-[#08075C] mb-4 drop-shadow-lg">
+            Arash AI Voice Assistant
+          </h1>
+          <p className="text-xl text-[#08075C] mb-8 drop-shadow-md">
+            Intelligent voice-powered support for your website
+          </p>
         </div>
 
-        {/* 3D Robot Animation - Left of Status Message */}
-        <div className="absolute bottom-8 left-72 pointer-events-none">
-          <div className="relative w-24 h-32">
-            {/* Robot Body */}
-            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-16 h-20 bg-gradient-to-b from-[#01ADEF] to-[#0194D1] rounded-lg shadow-lg animate-bounce">
-              {/* Robot Head */}
-              <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white rounded-full shadow-lg border-2 border-[#01ADEF]">
-                {/* Eyes */}
-                <div className="absolute top-3 left-2 w-2 h-2 bg-[#01ADEF] rounded-full animate-pulse"></div>
-                <div className="absolute top-3 right-2 w-2 h-2 bg-[#01ADEF] rounded-full animate-pulse"></div>
-                {/* Mouth */}
-                <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-1 bg-[#01ADEF] rounded-full"></div>
-                {/* Antenna */}
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-0.5 h-3 bg-[#08075C]"></div>
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-1.5 h-1.5 bg-[#01ADEF] rounded-full animate-ping"></div>
-              </div>
-
-              {/* Robot Arms */}
-              <div className="absolute top-2 -left-3 w-2 h-8 bg-[#01ADEF] rounded-full transform rotate-12 animate-pulse"></div>
-              <div className="absolute top-2 -right-3 w-2 h-8 bg-[#01ADEF] rounded-full transform -rotate-12 animate-pulse"></div>
-
-              {/* Robot Chest Panel */}
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-8 h-6 bg-white/20 rounded border border-white/40">
-                <div className="absolute top-1 left-1 w-1 h-1 bg-green-400 rounded-full animate-pulse"></div>
-                <div className="absolute top-1 right-1 w-1 h-1 bg-red-400 rounded-full animate-pulse"></div>
-                <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-4 h-0.5 bg-white/60 rounded"></div>
-              </div>
-
-              {/* Robot Legs */}
-              <div className="absolute -bottom-6 left-2 w-2 h-6 bg-[#0194D1] rounded-full"></div>
-              <div className="absolute -bottom-6 right-2 w-2 h-6 bg-[#0194D1] rounded-full"></div>
-
-              {/* Robot Feet */}
-              <div className="absolute -bottom-8 left-1 w-4 h-2 bg-[#08075C] rounded-full"></div>
-              <div className="absolute -bottom-8 right-1 w-4 h-2 bg-[#08075C] rounded-full"></div>
-            </div>
-
-            {/* Floating particles around robot */}
-            <div
-              className="absolute top-0 left-0 w-1 h-1 bg-[#01ADEF] rounded-full animate-ping"
-              style={{ animationDelay: "0s" }}
-            ></div>
-            <div
-              className="absolute top-4 right-0 w-1 h-1 bg-white rounded-full animate-ping"
-              style={{ animationDelay: "0.5s" }}
-            ></div>
-            <div
-              className="absolute bottom-12 left-2 w-1 h-1 bg-[#01ADEF] rounded-full animate-ping"
-              style={{ animationDelay: "1s" }}
-            ></div>
-            <div
-              className="absolute bottom-8 right-4 w-1 h-1 bg-white rounded-full animate-ping"
-              style={{ animationDelay: "1.5s" }}
-            ></div>
+        {/* Chat or Instructions */}
+        {showChat ? (
+          <div className="mb-6">
+            <StarWarsChat messages={messages} isTyping={isTyping} />
           </div>
+        ) : (
+          <div className="bg-gradient-to-r from-[#01ADEF]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#01ADEF]/20">
+            <p className="text-[#08075C] font-bold text-lg mb-4">How to Use Arash</p>
+            <ul className="space-y-2 text-[#08075C] text-sm">
+              <li>Hold the microphone button to speak</li>
+              <li>Ask questions about our services</li>
+              <li>Request a demo or pricing info</li>
+            </ul>
+          </div>
+        )}
+
+        {/* Status Indicator */}
+        <div className="absolute top-8 left-1/2 transform -translate-x-1/2 pointer-events-none">
+          {recordingState !== "ready" && recordingState !== "idle" && (
+            <p className="text-white text-sm bg-black/20 backdrop-blur-sm px-4 py-2 rounded-full">
+              {recordingState === "recording" && "Recording..."}
+              {recordingState === "processing" && "Processing audio..."}
+              {recordingState === "waiting-llm" && "Waiting for response..."}
+              {recordingState === "generating-voice" && "Generating voice..."}
+              {recordingState === "playing-response" && "Playing response..."}
+            </p>
+          )}
         </div>
 
-        {/* Status Message - Bottom Left Corner */}
-        <div className="absolute bottom-8 left-8 pointer-events-auto">
-          <div className="bg-white/95 backdrop-blur-md rounded-xl p-4 shadow-2xl border border-[#01ADEF]/20 max-w-sm">
-            <p className="text-[#08075C] font-semibold">{getStatusText()}</p>
-            {recordingState === "recording" && (
-              <p className="text-[#01ADEF] text-sm mt-2">{Math.ceil((100 - progress) / 10)} seconds remaining</p>
-            )}
-          </div>
+        {/* Processing Progress */}
+        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-64 pointer-events-none">
+          {recordingState === "recording" && (
+            <div className="bg-white/20 backdrop-blur-sm rounded-full h-2">
+              <div
+                className="bg-[#01ADEF] h-2 rounded-full transition-all duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
         </div>
 
         {/* Mic Button with Volume Visualization - Bottom Right */}
