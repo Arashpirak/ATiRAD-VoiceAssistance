@@ -1,38 +1,27 @@
-"use client"
+"use client";
 
-import { useEffect, useRef, useState } from "react"
-import { conversationStore, type ChatMessage } from "@/utils/conversation-store"
+import { useEffect, useRef } from "react";
+import { conversationStore, type ChatMessage } from "@/utils/conversation-store";
 
 interface StarWarsChatProps {
-  messages: ChatMessage[]; // Added to fix TypeScript error
-  isTyping?: boolean
-  showControls?: boolean
+  messages: ChatMessage[];
+  isTyping?: boolean;
+  showControls?: boolean;
 }
 
 export function StarWarsChat({ messages, isTyping = false, showControls = false }: StarWarsChatProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  // Removed local messages state to use prop directly
-  // const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages())
-
-  // Subscribe to conversation updates
-  useEffect(() => {
-    const unsubscribe = conversationStore.subscribe((newMessages) => {
-      // setMessages(newMessages) // No longer needed as messages is a prop
-    })
-
-    return unsubscribe
-  }, [])
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom when new messages or typing state changes
   useEffect(() => {
     if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [messages, isTyping])
+  }, [messages, isTyping]);
 
   const clearConversation = () => {
-    conversationStore.clearMessages()
-  }
+    conversationStore.clearMessages();
+  };
 
   return (
     <div className="relative w-full h-96 bg-gradient-to-b from-gray-50 to-white rounded-lg overflow-hidden border border-[#01ADEF]/20">
@@ -54,12 +43,12 @@ export function StarWarsChat({ messages, isTyping = false, showControls = false 
 
           {messages.map((message, index) => {
             // Calculate subtle depth effect - newer messages (higher index) are closer
-            const totalMessages = messages.length
-            const depthFactor = (totalMessages - index - 1) / Math.max(totalMessages - 1, 1)
-            const scale = 1 - depthFactor * 0.15 // Scale from 0.85 to 1 (subtle difference)
-            const opacity = 1 - depthFactor * 0.4 // Opacity from 0.6 to 1
-            const translateZ = depthFactor * -50 // Move back in 3D space (reduced)
-            const rotateX = depthFactor * 8 // Subtle tilt back for perspective (reduced)
+            const totalMessages = messages.length;
+            const depthFactor = (totalMessages - index - 1) / Math.max(totalMessages - 1, 1);
+            const scale = 1 - depthFactor * 0.15; // Scale from 0.85 to 1
+            const opacity = 1 - depthFactor * 0.4; // Opacity from 0.6 to 1
+            const translateZ = depthFactor * -50; // Move back in 3D space
+            const rotateX = depthFactor * 8; // Subtle tilt back for perspective
 
             return (
               <div
@@ -71,7 +60,7 @@ export function StarWarsChat({ messages, isTyping = false, showControls = false 
                   transform: `translateZ(${translateZ}px) rotateX(${rotateX}deg) scale(${scale})`,
                   opacity: opacity,
                   transformOrigin: "center bottom",
-                  marginBottom: `${depthFactor * 4}px`, // Reduced spacing difference
+                  marginBottom: `${depthFactor * 4}px`,
                 }}
               >
                 <div
@@ -81,8 +70,8 @@ export function StarWarsChat({ messages, isTyping = false, showControls = false 
                       : "bg-white text-gray-800 border border-gray-200 rounded-bl-md"
                   }`}
                   style={{
-                    fontSize: `${0.9 + (1 - depthFactor) * 0.1}rem`, // Font size from 0.9rem to 1rem (subtle)
-                    fontWeight: Math.round(400 + (1 - depthFactor) * 100), // Weight from 400 to 500 (subtle)
+                    fontSize: `${0.9 + (1 - depthFactor) * 0.1}rem`,
+                    fontWeight: Math.round(400 + (1 - depthFactor) * 100),
                   }}
                 >
                   <div className="flex items-start space-x-2">
@@ -95,7 +84,7 @@ export function StarWarsChat({ messages, isTyping = false, showControls = false 
                   <p className="mt-1 leading-relaxed">{message.text}</p>
                 </div>
               </div>
-            )
+            );
           })}
 
           {/* Typing indicator */}
@@ -143,5 +132,5 @@ export function StarWarsChat({ messages, isTyping = false, showControls = false 
         </div>
       )}
     </div>
-  )
+  );
 }
