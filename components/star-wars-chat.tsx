@@ -4,24 +4,26 @@ import { useEffect, useRef, useState } from "react"
 import { conversationStore, type ChatMessage } from "@/utils/conversation-store"
 
 interface StarWarsChatProps {
+  messages: ChatMessage[]; // Added to fix TypeScript error
   isTyping?: boolean
   showControls?: boolean
 }
 
-export function StarWarsChat({ isTyping = false, showControls = false }: StarWarsChatProps) {
+export function StarWarsChat({ messages, isTyping = false, showControls = false }: StarWarsChatProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages())
+  // Removed local messages state to use prop directly
+  // const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages())
 
   // Subscribe to conversation updates
   useEffect(() => {
     const unsubscribe = conversationStore.subscribe((newMessages) => {
-      setMessages(newMessages)
+      // setMessages(newMessages) // No longer needed as messages is a prop
     })
 
     return unsubscribe
   }, [])
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages or typing state changes
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight
@@ -85,7 +87,7 @@ export function StarWarsChat({ isTyping = false, showControls = false }: StarWar
                 >
                   <div className="flex items-start space-x-2">
                     <span
-                      className={`text-xs font-medium ${message.sender === "user" ? "text-white/80" : "text-gray-500"}`}
+                      className={`${message.sender === "user" ? "text-white/80" : "text-gray-500"} text-xs font-medium`}
                     >
                       {message.sender === "user" ? "You" : "Arash"}
                     </span>
