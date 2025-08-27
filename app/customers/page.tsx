@@ -16,7 +16,14 @@ interface Customer {
   logo: string;
 }
 
-
+// Customer data with their websites and 3D positions
+const customerData: Customer[] = [
+  {
+    name: "TechCorp",
+    website: "https://techcorp.example.com",
+    position: [2, 1, -5],
+    color: "#01ADEF",
+    logo: "TC",
   },
   {
     name: "HealthPlus",
