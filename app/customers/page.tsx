@@ -7,8 +7,8 @@ import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-// Define customer type with a strict position tuple
-interface Customer {
+// Define icon type with a strict position tuple
+interface IconData {
   name: string;
   website: string;
   position: [number, number, number]; // Tuple for Vector3
@@ -16,8 +16,8 @@ interface Customer {
   logo: string;
 }
 
-// Customer data with their websites and 3D positions
-const customerData: Customer[] = [
+// Icon data with their websites and 3D positions
+const iconData: IconData[] = [
   {
     name: "TechCorp",
     website: "https://techcorp.example.com",
@@ -76,27 +76,27 @@ const customerData: Customer[] = [
   },
 ];
 
-function CustomerIcon({ customer }: { customer: Customer }) {
+function FloatingIcon({ Icon, position, color, name, website }: IconData & { Icon: any }) {
   const handleClick = () => {
-    window.open(customer.website, "_blank");
+    window.open(website, "_blank");
   };
 
   return (
-    <Html position={customer.position} center>
+    <Html position={position} center>
       <div onClick={handleClick} className="flex flex-col items-center cursor-pointer group">
         <div
           className="flex items-center justify-center w-20 h-20 rounded-full backdrop-blur-sm border-2 border-white/20 hover:scale-110 transition-all duration-300 group-hover:border-white/40"
           style={{
-            backgroundColor: customer.color === "#ffffff" ? "rgba(255,255,255,0.1)" : "rgba(1,173,239,0.2)",
-            boxShadow: `0 0 30px ${customer.color}40`,
+            backgroundColor: color === "#ffffff" ? "rgba(255,255,255,0.1)" : "rgba(1,173,239,0.2)",
+            boxShadow: `0 0 30px ${color}40`,
           }}
         >
-          <span className="text-2xl font-bold" style={{ color: customer.color }}>
-            {customer.logo}
+          <span className="text-2xl font-bold" style={{ color }}>
+            {Icon}
           </span>
         </div>
         <div className="mt-2 text-center">
-          <p className="text-white text-sm font-medium">{customer.name}</p>
+          <p className="text-white text-sm font-medium">{name}</p>
           <div className="flex items-center gap-1 text-xs text-white/60 group-hover:text-white/80 transition-colors">
             <ExternalLink size={12} />
             <span>Visit Site</span>
@@ -117,9 +117,9 @@ function Scene() {
       {/* Stars background */}
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-      {/* Customer icons */}
-      {customerData.map((customer, index) => (
-        <CustomerIcon key={index} customer={customer} />
+      {/* Floating icons */}
+      {iconData.map((item, index) => (
+        <FloatingIcon key={index} Icon={item.logo} position={item.position} color={item.color} name={item.name} website={item.website} />
       ))}
 
       {/* Camera controls */}
