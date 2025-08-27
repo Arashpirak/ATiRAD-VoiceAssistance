@@ -13,7 +13,7 @@ interface IconData {
   website: string;
   position: [number, number, number]; // Tuple for Vector3
   color: string;
-  logo: string;
+  Icon: string; // Changed from logo to Icon to match error context
 }
 
 // Icon data with their websites and 3D positions
@@ -23,60 +23,60 @@ const iconData: IconData[] = [
     website: "https://techcorp.example.com",
     position: [2, 1, -5],
     color: "#01ADEF",
-    logo: "TC",
+    Icon: "TC",
   },
   {
     name: "HealthPlus",
     website: "https://healthplus.example.com",
     position: [-3, 2, -8],
     color: "#ffffff",
-    logo: "H+",
+    Icon: "H+",
   },
   {
     name: "EduLearn",
     website: "https://edulearn.example.com",
     position: [4, -1, -12],
     color: "#01ADEF",
-    logo: "EL",
+    Icon: "EL",
   },
   {
     name: "ShopMart",
     website: "https://shopmart.example.com",
     position: [-2, -2, -6],
     color: "#ffffff",
-    logo: "SM",
+    Icon: "SM",
   },
   {
     name: "FinanceHub",
     website: "https://financehub.example.com",
     position: [1, 3, -15],
     color: "#01ADEF",
-    logo: "FH",
+    Icon: "FH",
   },
   {
     name: "TravelGo",
     website: "https://travelgo.example.com",
     position: [-4, 0, -10],
     color: "#ffffff",
-    logo: "TG",
+    Icon: "TG",
   },
   {
     name: "FoodieApp",
     website: "https://foodieapp.example.com",
     position: [3, 2, -7],
     color: "#01ADEF",
-    logo: "FA",
+    Icon: "FA",
   },
   {
     name: "FitTracker",
     website: "https://fittracker.example.com",
     position: [-1, -3, -9],
     color: "#ffffff",
-    logo: "FT",
+    Icon: "FT",
   },
 ];
 
-function FloatingIcon({ Icon, position, color, name, website }: IconData & { Icon: any }) {
+function FloatingIcon({ Icon, position, color, name, website }: IconData) {
   const handleClick = () => {
     window.open(website, "_blank");
   };
@@ -119,7 +119,14 @@ function Scene() {
 
       {/* Floating icons */}
       {iconData.map((item, index) => (
-        <FloatingIcon key={index} Icon={item.logo} position={item.position} color={item.color} name={item.name} website={item.website} />
+        <FloatingIcon
+          key={index}
+          Icon={item.Icon}
+          position={item.position}
+          color={item.color}
+          name={item.name}
+          website={item.website}
+        />
       ))}
 
       {/* Camera controls */}
