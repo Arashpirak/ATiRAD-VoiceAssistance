@@ -1,14 +1,23 @@
-"use client"
+"use client";
 
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Html, Stars } from "@react-three/drei"
-import { Suspense } from "react"
-import { ArrowLeft, ExternalLink } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, Html, Stars } from "@react-three/drei";
+import { Suspense } from "react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+
+// Define customer type with a strict position tuple
+interface Customer {
+  name: string;
+  website: string;
+  position: [number, number, number]; // Tuple for Vector3
+  color: string;
+  logo: string;
+}
 
 // Customer data with their websites and 3D positions
-const customerData = [
+const customerData: Customer[] = [
   {
     name: "TechCorp",
     website: "https://techcorp.example.com",
@@ -65,12 +74,12 @@ const customerData = [
     color: "#ffffff",
     logo: "FT",
   },
-]
+];
 
-function CustomerIcon({ customer }: { customer: (typeof customerData)[0] }) {
+function CustomerIcon({ customer }: { customer: Customer }) {
   const handleClick = () => {
-    window.open(customer.website, "_blank")
-  }
+    window.open(customer.website, "_blank");
+  };
 
   return (
     <Html position={customer.position} center>
@@ -95,7 +104,7 @@ function CustomerIcon({ customer }: { customer: (typeof customerData)[0] }) {
         </div>
       </div>
     </Html>
-  )
+  );
 }
 
 function Scene() {
@@ -124,7 +133,7 @@ function Scene() {
         autoRotateSpeed={0.3}
       />
     </>
-  )
+  );
 }
 
 export default function CustomersShowcase() {
@@ -168,5 +177,5 @@ export default function CustomersShowcase() {
         </div>
       </div>
     </div>
-  )
+  );
 }
