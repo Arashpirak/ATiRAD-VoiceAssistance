@@ -1,23 +1,22 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
+import './globals.css';
 
-const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "AI Voice Assistant - Intelligent Chatbot Service",
-  description: "Voice-powered AI assistant for websites, WordPress plugins, and custom integrations",
-}
+export const metadata = {
+  title: 'ATiRAD Voice Assistance',
+  description: 'AI-powered voice assistance platform',
+};
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
+      <body>{children}</body>
     </html>
-  )
+  );
 }
