@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Mic, Users, Volume2, VolumeX } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import Link from "next/link"
-import { StarWarsChat } from "@/components/star-wars-chat"
-import { conversationStore, type ChatMessage } from "@/utils/conversation-store"
+import { useState, useEffect, useRef } from "react";
+import { Mic, Users, Volume2, VolumeX } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { StarWarsChat } from "@/components/star-wars-chat";
+import { conversationStore, type ChatMessage } from "@/utils/conversation-store";
 
 type RecordingState =
   | "idle"
@@ -15,253 +15,233 @@ type RecordingState =
   | "processing"
   | "waiting-llm"
   | "generating-voice"
-  | "playing-response"
+  | "playing-response";
 
 export default function VoiceAssistant() {
-  const [recordingState, setRecordingState] = useState<RecordingState>("idle")
-  const [progress, setProgress] = useState(0)
-  const [isListening, setIsListening] = useState(false)
-  const [permissionsGranted, setPermissionsGranted] = useState(false)
-  const [isMuted, setIsMuted] = useState(false)
-  const [volumeLevel, setVolumeLevel] = useState(0)
-  const [aiVolumeLevel, setAiVolumeLevel] = useState(0)
-  const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages())
-  const [showChat, setShowChat] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
+  const [recordingState, setRecordingState] = useState<RecordingState>("idle");
+  const [progress, setProgress] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const [permissionsGranted, setPermissionsGranted] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  const [volumeLevel, setVolumeLevel] = useState(0);
+  const [aiVolumeLevel, setAiVolumeLevel] = useState(0);
+  const [messages, setMessages] = useState<ChatMessage[]>(conversationStore.getMessages());
+  const [showChat, setShowChat] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const audioChunksRef = useRef<Blob[]>([])
-  const streamRef = useRef<MediaStream | null>(null)
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null)
-  const audioContextRef = useRef<AudioContext | null>(null)
-  const analyserRef = useRef<AnalyserNode | null>(null)
-  const animationFrameRef = useRef<number | null>(null)
-  const isRecordingRef = useRef(false)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const isRecordingRef = useRef(false);
 
   // Subscribe to conversation updates
   useEffect(() => {
     const unsubscribe = conversationStore.subscribe((newMessages) => {
-      setMessages(newMessages)
+      setMessages(newMessages);
       if (newMessages.length > 0) {
-        setShowChat(true)
+        setShowChat(true);
       }
-    })
+    });
 
     // Check if there are existing messages
-    const existingMessages = conversationStore.getMessages()
+    const existingMessages = conversationStore.getMessages();
     if (existingMessages.length > 0) {
-      setShowChat(true)
+      setShowChat(true);
     }
 
-    return unsubscribe
-  }, [])
-
-  // Add message to conversation store
-  const addMessage = (text: string, sender: "user" | "ai") => {
-    conversationStore.addMessage(text, sender)
-  }
+    return unsubscribe;
+  }, []);
 
   // Request permissions and play intro
   useEffect(() => {
     const initializeApp = async () => {
-      setRecordingState("requesting-permission")
+      setRecordingState("requesting-permission");
 
       try {
         // Request microphone permission
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-        streamRef.current = stream
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        streamRef.current = stream;
 
         // Setup audio context for visualization
-        audioContextRef.current = new AudioContext()
-        const source = audioContextRef.current.createMediaStreamSource(stream)
-        analyserRef.current = audioContextRef.current.createAnalyser()
-        analyserRef.current.fftSize = 256
-        source.connect(analyserRef.current)
-
-        setPermissionsGranted(true)
+        audioContextRef.current = new AudioContext();
+        const source = audioContextRef.current.createMediaStreamSource(stream);
+        analyserRef.current = audioContextRef.current.createAnalyser();
+        analyserRef.current.fftSize = 256;
+        source.connect(analyserRef.current);
 
         // Start continuous volume monitoring
-        startVolumeMonitoring()
+        startVolumeMonitoring();
 
-        // Play intro message and add to chat only if no existing messages
-        const existingMessages = conversationStore.getMessages()
-        if (existingMessages.length === 0) {
-          await playIntroMessage()
-        }
-        setRecordingState("ready")
+        setRecordingState("ready");
+        setPermissionsGranted(true);
       } catch (error) {
-        console.error("Permission denied:", error)
-        setRecordingState("idle")
+        console.error("Permission denied or error:", error);
+        setRecordingState("idle");
+        setPermissionsGranted(false);
       }
-    }
+    };
 
-    initializeApp()
+    initializeApp();
 
     return () => {
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current.getTracks().forEach((track) => track.stop());
       }
       if (audioContextRef.current) {
-        audioContextRef.current.close()
+        audioContextRef.current.close();
       }
       if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
+        cancelAnimationFrame(animationFrameRef.current);
       }
       if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current)
+        clearInterval(progressIntervalRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
   const startVolumeMonitoring = () => {
     const updateVolume = () => {
       if (analyserRef.current) {
-        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
-        analyserRef.current.getByteFrequencyData(dataArray)
-        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length
-        setVolumeLevel(Math.min(1, average / 128))
+        const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        setVolumeLevel(Math.min(1, average / 128));
       }
-      animationFrameRef.current = requestAnimationFrame(updateVolume)
-    }
-    animationFrameRef.current = requestAnimationFrame(updateVolume)
-  }
+      animationFrameRef.current = requestAnimationFrame(updateVolume);
+    };
+    animationFrameRef.current = requestAnimationFrame(updateVolume);
+  };
 
   const startRecording = () => {
-    if (recordingState !== "ready" || !streamRef.current) return
+    if (recordingState !== "ready" || !streamRef.current) return;
 
-    setRecordingState("recording")
-    setProgress(0)
-    setIsListening(false)
-    audioChunksRef.current = []
+    setRecordingState("recording");
+    setProgress(0);
+    setIsListening(false);
+    audioChunksRef.current = [];
 
-    const mediaRecorder = new MediaRecorder(streamRef.current)
-    mediaRecorderRef.current = mediaRecorder
+    const mediaRecorder = new MediaRecorder(streamRef.current);
+    mediaRecorderRef.current = mediaRecorder;
 
-    mediaRecorder.start(250) // Collect chunks every 250ms for better VAD
+    mediaRecorder.start(250);
 
     mediaRecorder.ondataavailable = (e) => {
-      audioChunksRef.current.push(e.data)
+      audioChunksRef.current.push(e.data);
       if (e.data.size > 0) {
-        processVoiceActivity(e.data)
+        processVoiceActivity(e.data);
       }
-    }
+    };
 
-    mediaRecorder.onstop = processAudio
+    mediaRecorder.onstop = processAudio;
 
     // Progress timer (max 30 seconds)
     progressIntervalRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          stopRecording()
-          return 100
+          stopRecording();
+          return 100;
         }
-        return prev + 100 / 300 // 100% in 30 seconds (300 * 100ms = 30s)
-      })
-    }, 100)
+        return prev + 100 / 300;
+      });
+    }, 100);
 
-    isRecordingRef.current = true
-  }
+    isRecordingRef.current = true;
+  };
 
   const stopRecording = () => {
-    if (recordingState !== "recording" || !mediaRecorderRef.current) return
+    if (recordingState !== "recording" || !mediaRecorderRef.current) return;
 
-    mediaRecorderRef.current.stop()
+    mediaRecorderRef.current.stop();
     if (progressIntervalRef.current) {
-      clearInterval(progressIntervalRef.current)
+      clearInterval(progressIntervalRef.current);
     }
-    setRecordingState("processing")
-    isRecordingRef.current = false
-  }
+    setRecordingState("processing");
+    isRecordingRef.current = false;
+  };
 
   const processVoiceActivity = async (blob: Blob) => {
-    // Simulate VAD - in real implementation, use WebAudio API or send to server for VAD
-    // For demo, assume voice detected after 500ms
     if (!isListening && audioChunksRef.current.length > 2) {
-      setIsListening(true)
+      setIsListening(true);
     }
-  }
+  };
 
   const processAudio = async () => {
-    setRecordingState("processing")
+    setRecordingState("processing");
 
-    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" })
-    const formData = new FormData()
-    formData.append("audio", audioBlob)
+    const audioBlob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+    const formData = new FormData();
+    formData.append("audio", audioBlob);
 
     try {
-      setRecordingState("waiting-llm")
+      setRecordingState("waiting-llm");
       const response = await fetch("/api/process-voice", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        addMessage(data.response, "ai")
-        setRecordingState("generating-voice")
+        setIsTyping(true);
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        conversationStore.addMessage(data.response, "ai");
+        setIsTyping(false);
+        setRecordingState("generating-voice");
 
-        // Simulate voice generation and playback
-        await new Promise((resolve) => setTimeout(resolve, 2000))
-        setRecordingState("playing-response")
-        await new Promise((resolve) => setTimeout(resolve, 3000)) // Simulate playback time
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setRecordingState("playing-response");
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        setRecordingState("ready")
+        setRecordingState("ready");
       } else {
-        addMessage("Sorry, I couldn't process that. Please try again.", "ai")
-        setRecordingState("ready")
+        setIsTyping(true);
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        conversationStore.addMessage("Sorry, I couldn't process that. Please try again.", "ai");
+        setIsTyping(false);
+        setRecordingState("ready");
       }
     } catch (error) {
-      console.error("Error:", error)
-      addMessage("An error occurred. Please try again.", "ai")
-      setRecordingState("ready")
+      console.error("Error:", error);
+      setIsTyping(true);
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      conversationStore.addMessage("An error occurred. Please try again.", "ai");
+      setIsTyping(false);
+      setRecordingState("ready");
     }
-  }
-
-  const playIntroMessage = async () => {
-    // Simulate intro
-    setIsTyping(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    addMessage("Hello! I'm Arash, your AI voice assistant. Hold the microphone button to speak.", "ai")
-    setIsTyping(false)
-  }
+  };
 
   const generateVolumeWaves = () => {
-    const waves = []
+    const waves = [];
     for (let i = 0; i < 5; i++) {
-      const height = Math.max(8, Math.min(64, volumeLevel * 64 * (i + 1) / 5))
+      const height = Math.max(8, Math.min(64, volumeLevel * 64 * (i + 1) / 5));
       waves.push(
         <div
           key={i}
           className="w-1 bg-[#01ADEF] rounded-full mx-0.5 transition-all duration-100"
           style={{ height: `${height}px` }}
         />
-      )
+      );
     }
-    return waves
-  }
-
-  const toggleMute = () => {
-    setIsMuted(!isMuted)
-    // Implement mute logic for audio playback
-  }
+    return waves;
+  };
 
   return (
     <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white relative overflow-hidden">
       <div className="relative w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
         {/* Top Left Controls */}
         <div className="absolute top-8 left-8 flex items-center gap-4 pointer-events-auto">
-          {/* Customers Page Link */}
           <Link href="/customers">
             <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm flex items-center gap-2">
               <Users size={16} />
               Our Customers
             </Button>
           </Link>
-
-          {/* Mute Button */}
           <Button
-            onClick={toggleMute}
+            onClick={() => setIsMuted(!isMuted)}
             variant="ghost"
             size="icon"
             className="text-white hover:bg-white/20 rounded-full backdrop-blur-sm"
@@ -272,9 +252,11 @@ export default function VoiceAssistant() {
 
         {/* Sign In Button - Top Right */}
         <div className="absolute top-8 right-8 pointer-events-auto">
-          <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
-            Sign In
-          </Button>
+          <Link href="/pathway">
+            <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
+              Sign In
+            </Button>
+          </Link>
         </div>
 
         {/* Main Content */}
@@ -330,36 +312,25 @@ export default function VoiceAssistant() {
 
         {/* Mic Button with Volume Visualization - Bottom Right */}
         <div className="absolute bottom-8 right-8 flex items-center gap-4 pointer-events-auto">
-          {/* Volume Visualization next to mic */}
           <div className="flex items-end h-16 bg-white/20 backdrop-blur-sm rounded-full border border-white/30 flex-row px-7">
             {generateVolumeWaves()}
           </div>
-
-          {/* Mic Button with label */}
           <div className="flex flex-col items-center">
-            {/* Hold to speak text */}
             <div className="mb-2">
               <span className="text-white text-sm font-medium bg-black/20 backdrop-blur-sm px-3 py-1 rounded-full">
                 Hold to speak
               </span>
             </div>
-
-            {/* Mic Button */}
             <div className="relative">
-              {/* Outer pulse rings */}
               {(recordingState === "recording" || recordingState === "playing-response") && (
                 <>
                   <div className="absolute inset-0 rounded-full bg-[#01ADEF]/30 animate-ping" />
                   <div className="absolute inset-0 rounded-full bg-white/20 animate-ping animation-delay-75" />
                 </>
               )}
-
-              {/* Voice activity indicator */}
               {isListening && recordingState === "recording" && (
                 <div className="absolute inset-0 rounded-full bg-green-400/40 animate-pulse" />
               )}
-
-              {/* Mic Button */}
               <button
                 onMouseDown={startRecording}
                 onMouseUp={stopRecording}
@@ -379,8 +350,6 @@ export default function VoiceAssistant() {
               `}
               >
                 <Mic size={32} />
-
-                {/* Progress ring */}
                 {recordingState === "recording" && (
                   <svg className="absolute inset-0 w-full h-full -rotate-90">
                     <circle cx="50%" cy="50%" r="35" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3" />
@@ -411,5 +380,5 @@ export default function VoiceAssistant() {
         </div>
       </div>
     </div>
-  )
+  );
 }
