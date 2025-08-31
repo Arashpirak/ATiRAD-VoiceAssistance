@@ -189,10 +189,22 @@ export default function VoiceAssistant() {
         // Add the user's transcribed message to the chat
         conversationStore.addMessage(data.response, "user");
 
-        // Simulate AI thinking and responding
+        // Get AI response
         setIsTyping(true);
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        conversationStore.addMessage("This is a placeholder AI response.", "ai");
+        const textResponse = await fetch("/api/generate-text", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ prompt: data.response }),
+        });
+        const textData = await textResponse.json();
+
+        if (textData.success) {
+          conversationStore.addMessage(textData.response, "ai");
+        } else {
+          conversationStore.addMessage("Sorry, I couldn't generate a response.", "ai");
+        }
         setIsTyping(false);
         setRecordingState("generating-voice");
 
