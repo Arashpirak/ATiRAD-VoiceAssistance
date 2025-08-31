@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { GoogleGenerativeAI } from "@google/generative-ai"
 
-const genAI = new GoogleGenerativeAI(process.env.AIzaSyDjZzs6Gzo__dxCTjIvY3LpdAW4jfZTTV8!)
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
 
 async function audioToText(audioBuffer: Buffer) {
   const audioBase64 = audioBuffer.toString("base64")
@@ -45,9 +45,10 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Error processing voice:", error)
+    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
     return NextResponse.json({
       success: false,
-      error: "Failed to process audio",
+      error: "Failed to process audio: " + errorMessage,
     })
   }
 }
