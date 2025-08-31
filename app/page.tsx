@@ -186,12 +186,17 @@ export default function VoiceAssistant() {
       const data = await response.json();
 
       if (data.success) {
+        // Add the user's transcribed message to the chat
+        conversationStore.addMessage(data.response, "user");
+
+        // Simulate AI thinking and responding
         setIsTyping(true);
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        conversationStore.addMessage(data.response, "ai");
+        conversationStore.addMessage("This is a placeholder AI response.", "ai");
         setIsTyping(false);
         setRecordingState("generating-voice");
 
+        // Simulate generating and playing audio response
         await new Promise((resolve) => setTimeout(resolve, 2000));
         setRecordingState("playing-response");
         await new Promise((resolve) => setTimeout(resolve, 3000));
