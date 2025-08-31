@@ -203,7 +203,9 @@ export default function VoiceAssistant() {
         if (textData.success) {
           conversationStore.addMessage(textData.response, "ai");
         } else {
-          conversationStore.addMessage("Sorry, I couldn't generate a response.", "ai");
+          // Display the detailed error from the API for better debugging
+          const errorMessage = textData.error || "Sorry, I couldn't generate a response.";
+          conversationStore.addMessage(errorMessage, "ai");
         }
         setIsTyping(false);
         setRecordingState("generating-voice");
