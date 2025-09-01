@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Stars } from "@react-three/drei";
+import { Stars, OrbitControls } from "@react-three/drei";
 import { Mic, Users, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -255,6 +255,13 @@ export default function VoiceAssistant() {
       <div className="absolute inset-0 z-0">
         <Canvas>
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+          <OrbitControls
+            enablePan={false}
+            enableZoom={false}
+            enableRotate={true}
+            autoRotate={true}
+            autoRotateSpeed={0.2}
+          />
         </Canvas>
       </div>
       <div className="relative z-10 w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
