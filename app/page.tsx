@@ -250,6 +250,33 @@ export default function VoiceAssistant() {
     return waves;
   };
 
+  const generateAiVolumeWaves = () => {
+    const waves = [];
+    const waveCount = 8; // Increased count for wider bar
+
+    for (let i = 0; i < waveCount; i++) {
+      const isActive = aiVolumeLevel > (i + 1) * 0.125;
+      const height = isActive ? 20 + aiVolumeLevel * 30 + Math.sin(Date.now() * 0.015 + i) * 5 : 8;
+      const opacity = isActive ? 0.9 : 0.3;
+
+      waves.push(
+        <div
+          key={i}
+          className="bg-gradient-to-t from-[#01ADEF] to-white rounded-t-full transition-all duration-200"
+          style={{
+            width: "4px",
+            height: `${height}px`,
+            marginRight: "3px",
+            opacity: opacity,
+            boxShadow: isActive ? "0 0 10px rgba(1, 173, 239, 0.8)" : "none",
+          }}
+        />
+      );
+    }
+
+    return waves;
+  };
+
   return (
     <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-[#08075C] relative overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -265,8 +292,16 @@ export default function VoiceAssistant() {
         </Canvas>
       </div>
       <div className="relative z-10 w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
-        {/* Top Left Controls */}
-        <div className="absolute top-8 left-8 flex items-center gap-4 pointer-events-auto">
+        {/* AI Voice Volume Bar - Top Left */}
+        <div className="absolute top-8 left-8 flex flex-col items-center gap-2 z-20">
+          <span className="text-white text-xs font-medium">AI Voice</span>
+          <div className="flex items-end h-12 bg-white/20 backdrop-blur-sm rounded-lg border border-white/30 px-4 py-2">
+            {generateAiVolumeWaves()}
+          </div>
+        </div>
+
+        {/* Top Right Controls */}
+        <div className="absolute top-8 right-8 flex items-center gap-4 pointer-events-auto">
           <Link href="/customers">
             <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm flex items-center gap-2">
               <Users size={16} />
