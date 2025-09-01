@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Canvas } from "@react-three/fiber";
+import { Stars } from "@react-three/drei";
 import { Mic, Users, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -249,8 +251,13 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white relative overflow-hidden">
-      <div className="relative w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
+    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#96d3eb] to-white relative overflow-hidden">#96d3eb
+      <div className="absolute inset-0 z-0">
+        <Canvas>
+          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+        </Canvas>
+      </div>
+      <div className="relative z-10 w-full h-full max-w-6xl mx-auto flex flex-col items-center justify-center p-8">
         {/* Top Left Controls */}
         <div className="absolute top-8 left-8 flex items-center gap-4 pointer-events-auto">
           <Link href="/customers">
@@ -294,7 +301,7 @@ export default function VoiceAssistant() {
             <StarWarsChat messages={messages} isTyping={isTyping} />
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-[#01ADEF]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#01ADEF]/20">
+          <div className="bg-gradient-to-r from-[#96d3eb]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#96d3eb]/20">
             <p className="text-[#08075C] font-bold text-lg mb-4">How to Use Arash</p>
             <ul className="space-y-2 text-[#08075C] text-sm">
               <li>Hold the microphone button to speak</li>
