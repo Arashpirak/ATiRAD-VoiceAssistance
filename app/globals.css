@@ -9,7 +9,7 @@
 :root {
   --primary: #01ADEF;
   --secondary: #08075C;
-  --background: linear-gradient(135deg, #08075C, #01ADEF, hwb(176 64% 14%));
+  --background: linear-gradient(135deg, #08075C, #01ADEF, #96d3eb);
 }
 
 body {
