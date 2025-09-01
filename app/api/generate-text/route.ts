@@ -14,8 +14,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    const prePrompt = "You are a helpful assistant providing a service for other websites. Your answers must be short and concise, like a single sentence.";
+    const fullPrompt = `${prePrompt}\n\nUser: ${prompt}\n\nAssistant:`;
+
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" })
-    const result = await model.generateContent(prompt)
+    const result = await model.generateContent(fullPrompt)
     const response = await result.response
     const text = response.text()
 
