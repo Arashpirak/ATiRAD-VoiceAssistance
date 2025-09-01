@@ -270,7 +270,7 @@ export default function VoiceAssistant() {
         </div>
 
         {/* Sign In Button - Top Right */}
-        <div className="absolute top-8 right-8 pointer-events-auto">
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 pointer-events-auto">
           <Link href="/pathway">
             <Button className="bg-white/20 border-white/30 text-white hover:bg-white/30 backdrop-blur-sm">
               Sign In
