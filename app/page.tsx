@@ -251,7 +251,7 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#96d3eb] to-white relative overflow-hidden">#96d3eb
+    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Canvas>
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
@@ -301,7 +301,7 @@ export default function VoiceAssistant() {
             <StarWarsChat messages={messages} isTyping={isTyping} />
           </div>
         ) : (
-          <div className="bg-gradient-to-r from-[#96d3eb]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#96d3eb]/20">
+          <div className="bg-gradient-to-r from-[#01ADEF]/10 to-[#08075C]/10 rounded-2xl p-6 border border-[#01ADEF]/20">
             <p className="text-[#08075C] font-bold text-lg mb-4">How to Use Arash</p>
             <ul className="space-y-2 text-[#08075C] text-sm">
               <li>Hold the microphone button to speak</li>
