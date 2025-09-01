@@ -251,7 +251,7 @@ export default function VoiceAssistant() {
   };
 
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white relative overflow-hidden">
+    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-[#96d3eb] relative overflow-hidden">
       <div className="absolute inset-0 z-0">
         <Canvas>
           <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />

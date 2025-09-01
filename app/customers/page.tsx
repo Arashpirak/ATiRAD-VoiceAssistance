@@ -145,7 +145,7 @@ function Scene() {
 
 export default function CustomersShowcase() {
   return (
-    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-white overflow-hidden">
+    <div className="w-full h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-[#96d3eb] overflow-hidden">
       <Canvas
         camera={{
           position: [0, 0, 0],
