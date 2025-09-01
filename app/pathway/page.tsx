@@ -488,7 +488,7 @@ export default function PathwayPage() {
   const CurrentWindowComponent = currentWindow?.component
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-[#96d3eb] overflow-hidden relative">
+    <div className="min-h-screen bg-gradient-to-br from-[#08075C] via-[#01ADEF] to-[#08075C] overflow-hidden relative">
       {/* Static Pathway Background - Always Visible */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         {/* Pathway Lines */}
