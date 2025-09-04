@@ -5,6 +5,11 @@ import cssInjectedByJs from 'vite-plugin-css-injected-by-js';
 
 export default defineConfig({
   plugins: [react(), cssInjectedByJs()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './'),
+    },
+  },
   build: {
     lib: {
       entry: path.resolve(__dirname, 'src/plugin.tsx'),
