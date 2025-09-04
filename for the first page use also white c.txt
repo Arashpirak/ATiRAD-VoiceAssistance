@@ -1,1 +1,4 @@
 the narrows should turn about 45 degree to top how they shows that the side window is in depth. the pins buttons should be transparent in comparison to windows how if window is in front of them , user can see a shadow of them but if user point on them they become toplayer than the window . noe they are blocking some part of windows . delete the secons line of explanation in chatbox window. delete the :(AI Vooice Assistant) text box in first page . i dont need that. also delete the robot shape. it dose not looks good. 
+
+build command: npm install && npm run build && npm run build:plugin
+start command: npm run start
