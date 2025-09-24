@@ -7,8 +7,6 @@ const fs = require('fs').promises;
 if (typeof fetch === "undefined") {
   global.fetch = require("node-fetch");
 }
-require("dotenv").config(); // importing environment variables from .env file
-
 const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev, dir: __dirname }); // Explicitly set app directory
 const handle = app.getRequestHandler();
