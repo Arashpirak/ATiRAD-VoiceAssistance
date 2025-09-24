@@ -23,24 +23,35 @@ app.prepare().then(() => {
       const parsedUrl = parse(req.url, true);
       const { pathname } = parsedUrl;
 
+      async function fetchWithTimeout(resource, options) {
+        const { timeout = 5000 } = options;
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        const response = await fetch(resource, {
+            ...options,
+            signal: controller.signal,
+        });
+        clearTimeout(id);
+        return response;
+        }
+
       
       // ✅ 1. New API route for Gemini quotes
       if (pathname === "/api/quote") {
         try {
           // Make request to Gemini API
-          const response = await fetch(
+        const response = await fetchWithTimeout(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=" +
-              process.env.GEMINI_API_KEY,
+                process.env.GEMINI_API_KEY,
             {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [
-                  { parts: [{ text: "Give me one short motivational quote." }] }
-                ]
-              })
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                contents: [{ parts: [{ text: "Give me one short motivational quote." }] }]
+                }),
+                timeout: 5000
             }
-          );
+            );
 
           // If HTTP status is not 200–299
           if (!response.ok) {
