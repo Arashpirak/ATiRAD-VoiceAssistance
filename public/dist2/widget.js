@@ -5,7 +5,7 @@
   widget.style.bottom = "20px";
   widget.style.right = "20px";
   widget.style.width = "300px";
-  widget.style.minHeight = "120px";
+  widget.style.minHeight = "200px"; // Increased height to accommodate input
   widget.style.background = "linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%)";
   widget.style.borderRadius = "16px";
   widget.style.boxShadow = "0px 8px 24px rgba(0, 0, 0, 0.15)";
@@ -28,17 +28,38 @@
 
   // Quote text
   const quoteText = document.createElement("p");
-  quoteText.textContent = "Loading inspiration...";
+  quoteText.textContent = "Enter a prompt to get inspired!";
   quoteText.style.margin = "0 0 12px 0";
   quoteText.style.fontStyle = "italic";
   quoteText.style.color = "#555";
   widget.appendChild(quoteText);
 
-  // Fetch new quote from backend
-  async function fetchQuote() {
+  // Input field for custom prompt
+  const promptInput = document.createElement("textarea");
+  promptInput.placeholder = "Enter your prompt (e.g., 'Give me a quote about courage')...";
+  promptInput.style.width = "100%";
+  promptInput.style.height = "60px";
+  promptInput.style.padding = "8px";
+  promptInput.style.marginBottom = "10px";
+  promptInput.style.border = "1px solid #ccc";
+  promptInput.style.borderRadius = "8px";
+  promptInput.style.fontSize = "14px";
+  promptInput.style.resize = "none";
+  widget.appendChild(promptInput);
+
+  // Fetch quote from backend
+  async function fetchQuote(prompt) {
     quoteText.textContent = "✨ Fetching wisdom...";
     try {
-      const res = await fetch("https://factoryab.ir/api/quote");
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const res = await fetch("https://factoryab.ir/api/quote", {
+        method: "POST", // Use POST to send custom prompt
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: prompt || "Give me one short motivational quote." }), // Default prompt if empty
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
       const data = await res.json();
       if (data.quote) {
         quoteText.textContent = "“" + data.quote.trim() + "”";
@@ -51,35 +72,50 @@
     }
   }
 
-  // Refresh button
-  const refreshBtn = document.createElement("button");
-  refreshBtn.textContent = "🔄 New Quote";
-  refreshBtn.style.display = "inline-block";
-  refreshBtn.style.padding = "6px 12px";
-  refreshBtn.style.fontSize = "13px";
-  refreshBtn.style.cursor = "pointer";
-  refreshBtn.style.border = "none";
-  refreshBtn.style.borderRadius = "8px";
-  refreshBtn.style.background = "linear-gradient(90deg, #007BFF, #00C6FF)";
-  refreshBtn.style.color = "#fff";
-  refreshBtn.style.fontWeight = "500";
-  refreshBtn.style.boxShadow = "0px 4px 10px rgba(0,0,0,0.1)";
-  refreshBtn.style.transition = "all 0.2s ease-in-out";
+  // Submit button
+  const submitBtn = document.createElement("button");
+  submitBtn.textContent = "🔄 Get Quote";
+  submitBtn.style.display = "inline-block";
+  submitBtn.style.padding = "6px 12px";
+  submitBtn.style.fontSize = "13px";
+  submitBtn.style.cursor = "pointer";
+  submitBtn.style.border = "none";
+  submitBtn.style.borderRadius = "8px";
+  submitBtn.style.background = "linear-gradient(90deg, #007BFF, #00C6FF)";
+  submitBtn.style.color = "#fff";
+  submitBtn.style.fontWeight = "500";
+  submitBtn.style.boxShadow = "0px 4px 10px rgba(0,0,0,0.1)";
+  submitBtn.style.transition = "all 0.2s ease-in-out";
 
-  refreshBtn.onmouseover = () => {
-    refreshBtn.style.opacity = "0.85";
+  submitBtn.onmouseover = () => {
+    submitBtn.style.opacity = "0.85";
   };
-  refreshBtn.onmouseout = () => {
-    refreshBtn.style.opacity = "1";
+  submitBtn.onmouseout = () => {
+    submitBtn.style.opacity = "1";
   };
 
-  refreshBtn.onclick = fetchQuote;
+  submitBtn.onclick = () => {
+    const prompt = promptInput.value.trim();
+    if (!prompt) {
+      quoteText.textContent = "⚠️ Please enter a prompt.";
+      return;
+    }
+    fetchQuote(prompt);
+  };
 
-  widget.appendChild(refreshBtn);
+  // Allow pressing Enter to submit
+  promptInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault(); // Prevent new line in textarea
+      submitBtn.click(); // Trigger button click
+    }
+  });
+
+  widget.appendChild(submitBtn);
 
   // Add widget to page
   document.body.appendChild(widget);
 
-  // Load first quote automatically
+  // Load default quote on initialization
   fetchQuote();
 })();
