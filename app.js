@@ -3,6 +3,7 @@ const { parse } = require('url');
 const next = require('next');
 const path = require('path');
 const fs = require('fs').promises;
+const cors = require('cors'); // Add cors package
 
 if (typeof fetch === "undefined") {
   global.fetch = require("node-fetch");
@@ -11,6 +12,13 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev, dir: __dirname }); // Explicitly set app directory
 const handle = app.getRequestHandler();
 const PORT = process.env.PORT || 10000; // Default to 10000 if not set
+
+// Use CORS middleware for /api/quote
+const corsMiddleware = cors({
+  origin: ['https://www.atiradco.com', 'http://localhost:3000'], // Allow specific origins; add more as needed
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+});
 
 // Handle uncaught exceptions gracefully
 process.on('uncaughtException', (err) => {
@@ -41,7 +49,7 @@ app.prepare().then(() => {
       if (pathname === "/api/quote") {
         try {
           // Make request to Gemini API
-        const response = await fetch(
+        const response = await fetchWithTimeout(
             "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" +
                 process.env.GEMINI_API_KEY,
 
@@ -49,7 +57,7 @@ app.prepare().then(() => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                contents: [{ parts: [{ text: "Give me one short motivational quote." }] }]
+                contents: [{ parts: [{ text: "Give me one new short motivational quote." }] }]
                 }),
                 timeout: 15000
             }
