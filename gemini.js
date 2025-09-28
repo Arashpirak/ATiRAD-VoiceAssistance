@@ -27,17 +27,18 @@ async function fetchWithTimeout(resource, options, retries = 3, delay = 1000) {
 // Fallback: Fetch quote from OpenRouter
 async function fetchOpenRouterQuote(prompt) {
   try {
-    // Optional: Variety - Rotate between free models for redundancy
+    // Single default model (uncomment this for simple fallback)
+    const model = "deepseek/deepseek-chat-v3-0324:free";
+
+    // Optional: Rotate between free models for variety (uncomment to enable)
+    /*
     const freeModels = [
       "deepseek/deepseek-chat-v3-0324:free",  // Fast, reliable free model
       "meta-llama/llama-3.1-8b-instruct:free",  // Llama alternative
       "google/gemini-flash-1.5-exp:free"  // Gemini-like free tier (if available)
-      // Add more: e.g., "nousresearch/hermes-3-llama-3.1-8b:free"
     ];
-    const model = freeModels[Math.floor(Math.random() * freeModels.length)];  // Random rotation (uncomment below to enable)
-
-    // Or use a single default model (simpler, uncomment this line instead):
-    const model = "deepseek/deepseek-chat-v3-0324:free";
+    const model = freeModels[Math.floor(Math.random() * freeModels.length)];
+    */
 
     const requestBody = JSON.stringify({
       model: model,
@@ -55,8 +56,8 @@ async function fetchOpenRouterQuote(prompt) {
         headers: {
           "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://factoryab.ir",  // Optional: Your site for rankings
-          "X-Title": "Daily Motivation Widget"  // Optional: Your app name
+          "HTTP-Referer": "https://factoryab.ir",
+          "X-Title": "Daily Motivation Widget"
         },
         body: requestBody,
         timeout: 15000,
@@ -113,7 +114,7 @@ async function fetchGeminiQuote(prompt) {
     console.log("Gemini API request body:", requestBody);
 
     const response = await fetchWithTimeout(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,7 +128,6 @@ async function fetchGeminiQuote(prompt) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Gemini API error: ${response.status} ${response.statusText}`, errorText);
-      // Fallback to OpenRouter on Gemini failure
       console.log("Gemini failed, falling back to OpenRouter...");
       return await fetchOpenRouterQuote(prompt);
     }
@@ -137,7 +137,6 @@ async function fetchGeminiQuote(prompt) {
       data = await response.json();
     } catch (parseErr) {
       console.error("Failed to parse Gemini response:", parseErr);
-      // Fallback to OpenRouter on parsing error
       console.log("Gemini parsing failed, falling back to OpenRouter...");
       return await fetchOpenRouterQuote(prompt);
     }
@@ -153,7 +152,6 @@ async function fetchGeminiQuote(prompt) {
     return { quote };
   } catch (err) {
     console.error("Gemini request failed:", err);
-    // Fallback to OpenRouter on any other error
     console.log("Gemini overall failed, falling back to OpenRouter...");
     return await fetchOpenRouterQuote(prompt);
   }
