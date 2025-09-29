@@ -1,54 +1,22 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { NextResponse } from 'next/server';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-
-async function audioToText(audioBuffer: Buffer) {
-  const audioBase64 = audioBuffer.toString("base64")
-  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-
-  const audio = {
-    inlineData: {
-      mimeType: "audio/webm",
-      data: audioBase64,
-    },
-  }
-
-  const result = await model.generateContent([
-    "Please transcribe this audio.",
-    audio,
-  ])
-  const response = result.response
-  const text = response.text()
-  return text
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const formData = await request.formData()
-    const audioFile = formData.get("audio") as File
+    // This is a placeholder. In a real application, you would process the audio.
+    // For now, we'll simulate a successful transcription.
+    const formData = await request.formData();
+    const audio = formData.get('audio');
 
-    if (!audioFile) {
-      return NextResponse.json({
-        success: false,
-        error: "No audio file provided",
-      })
+    if (!audio) {
+      return NextResponse.json({ success: false, error: 'No audio file found.' }, { status: 400 });
     }
 
-    const audioBuffer = Buffer.from(await audioFile.arrayBuffer())
-    const transcribedText = await audioToText(audioBuffer)
+    // Simulate transcription
+    const transcription = "This is a simulated transcription of the user's voice.";
 
-    return NextResponse.json({
-      success: true,
-      response: transcribedText,
-      audioLength: audioBuffer.byteLength,
-    })
+    return NextResponse.json({ success: true, response: transcription });
   } catch (error) {
-    console.error("Error processing voice:", error)
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json({
-      success: false,
-      error: "Failed to process audio: " + errorMessage,
-    })
+    console.error('Error processing voice:', error);
+    return NextResponse.json({ success: false, error: 'Server error processing audio.' }, { status: 500 });
   }
 }

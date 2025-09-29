@@ -1,37 +1,21 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { GoogleGenerativeAI } from "@google/generative-ai"
+import { NextResponse } from 'next/server';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
-
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { prompt } = await request.json()
+    // This is a placeholder. In a real application, you would use an LLM.
+    // For now, we'll return a static, friendly response.
+    const { prompt } = await request.json();
 
     if (!prompt) {
-      return NextResponse.json({
-        success: false,
-        error: "No prompt provided",
-      })
+      return NextResponse.json({ success: false, error: 'No prompt provided.' }, { status: 400 });
     }
 
-    const prePrompt = "You are a helpful assistant providing a service for other websites. Your answers must be short and concise, like a single sentence.";
-    const fullPrompt = `${prePrompt}\n\nUser: ${prompt}\n\nAssistant:`;
+    // Simulate AI response
+    const aiResponse = `You said: "${prompt}" - Thank you for your message! This is a simulated AI response.`;
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" })
-    const result = await model.generateContent(fullPrompt)
-    const response = await result.response
-    const text = response.text()
-
-    return NextResponse.json({
-      success: true,
-      response: text,
-    })
+    return NextResponse.json({ success: true, response: aiResponse });
   } catch (error) {
-    console.error("Error generating text:", error)
-    const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-    return NextResponse.json({
-      success: false,
-      error: "Failed to generate text: " + errorMessage,
-    })
+    console.error('Error generating text:', error);
+    return NextResponse.json({ success: false, error: 'Server error generating text.' }, { status: 500 });
   }
 }
