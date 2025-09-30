@@ -1,22 +1,19 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from "next/server"
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // This is a placeholder. In a real application, you would process the audio.
-    // For now, we'll simulate a successful transcription.
-    const formData = await request.formData();
-    const audio = formData.get('audio');
+    // Simulated voice processing
+    // In production, you would integrate with a real speech-to-text service
 
-    if (!audio) {
-      return NextResponse.json({ success: false, error: 'No audio file found.' }, { status: 400 });
-    }
+    await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    // Simulate transcription
-    const transcription = "This is a simulated transcription of the user's voice.";
-
-    return NextResponse.json({ success: true, response: transcription });
+    return NextResponse.json({
+      success: true,
+      response: "Hello! I'm your AI assistant. How can I help you today?",
+      transcription: "Hello, my name is John. Nice to meet you!",
+    })
   } catch (error) {
-    console.error('Error processing voice:', error);
-    return NextResponse.json({ success: false, error: 'Server error processing audio.' }, { status: 500 });
+    console.error("Error processing voice:", error)
+    return NextResponse.json({ success: false, error: "Failed to process voice" }, { status: 500 })
   }
 }
