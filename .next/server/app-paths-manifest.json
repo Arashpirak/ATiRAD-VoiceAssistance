@@ -1,0 +1,11 @@
+{
+  "/api/generate-text/route": "app/api/generate-text/route.js",
+  "/api/process-voice/route": "app/api/process-voice/route.js",
+  "/api/send-otp/route": "app/api/send-otp/route.js",
+  "/api/verify-otp/route": "app/api/verify-otp/route.js",
+  "/page": "app/page.js",
+  "/home/page": "app/home/page.js",
+  "/pathway/page": "app/pathway/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/customers/page": "app/customers/page.js"
+}
