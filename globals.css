@@ -1,0 +1,21 @@
+/* Global styles for ATiRAD Voice Assistance */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #01ADEF;
+  --secondary: #08075C;
+  --background: linear-gradient(135deg, #08075C, #01ADEF, #ffffff);
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--background);
+  color: var(--secondary);
+}
+
+* {
+  box-sizing: border-box;
+}
