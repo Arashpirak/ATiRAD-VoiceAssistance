@@ -1,44 +1,46 @@
 {
-"name": "ati-rad-voice-assistance",
-"version": "1.0.0",
-"private": true,
-"scripts": {
-"dev": "next dev",
-"build": "next build",
-"start": "next start",
-"lint": "next lint",
-"build:plugin": "vite build"
-},
-"dependencies": {
-"@google/generative-ai": "^0.16.0",
-"@react-three/drei": "^9.114.0",
-"@react-three/fiber": "^8.17.10",
-"class-variance-authority": "^0.7.1",
-"clsx": "^2.1.1",
-"lucide-react": "^0.544.0",
-"next": "^15.5.4",
-"react": "^19.1.1",
-"react-dom": "^19.1.1",
-"tailwind-merge": "^3.3.1",
-"tailwindcss-animate": "^1.0.7",
-"three": "^0.169.0"
-},
-"devDependencies": {
-"@types/node": "^24.5.2",
-"@types/react": "^19.1.15",
-"@types/react-dom": "^19.1.9",
-"@types/three": "^0.169.0",
-"@vitejs/plugin-react": "^4.3.2",
-"autoprefixer": "^10.4.16",
-"eslint": "^8.57.0",
-"eslint-config-next": "^14.2.6",
-"postcss": "^8.5.6",
-"tailwindcss": "^4.1.13",
-"typescript": "^5.9.2",
-"vite": "^5.4.0",
-"vite-plugin-css-injected-by-js": "^3.5.2"
-},
-"engines": {
-"node": "20.x"
-}
+  "name": "combined-project",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "build:plugin": "vite build"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.17.10",
+    "three": "^0.169.0",
+    "next": "^15.5.4",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "^0.544.0",
+    "tailwind-merge": "3.3.1",
+    "tailwindcss-animate": "1.0.7",
+    "fs": "0.0.1-security",
+    "path": "0.12.7",
+    "tailwindcss": "^4.1.13",
+    "postcss": "^8.5.6",
+    "autoprefixer": "^10.4.16",
+    "@google/generative-ai": "^0.16.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.169.0",
+    "@types/react": "19.1.15",
+    "@types/react-dom": "19.1.9",
+    "@types/node": "^24.5.2",
+    "typescript": "^5.9.2",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^15.5.4",
+    "vite": "^5.4.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "vite-plugin-css-injected-by-js": "^3.5.2"
+  },
+  "engines": {
+    "node": "20.x"
+  }
 }
