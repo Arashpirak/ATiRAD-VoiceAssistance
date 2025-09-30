@@ -9,6 +9,7 @@ import { PricingWindow } from "./pricing-window"
 import { GetStartedWindow } from "./get-started-window"
 import { ChatboxWindow } from "./chatbox-window"
 import { SettingsWindow } from "./settings-window"
+import { MobileAuthWindow } from "./mobile-auth-window"
 
 export interface WindowConfig {
   id: string
@@ -29,6 +30,15 @@ export const WINDOW_REGISTRY: WindowConfig[] = [
     component: SignInWindow,
     initialPosition: { x: -45, y: 15, scale: 1.0, depth: 0 },
     unlocked: true,
+  },
+  {
+    id: "mobile-auth",
+    title: "احراز هویت موبایل",
+    description: "تأیید هویت با شماره موبایل و OTP",
+    component: MobileAuthWindow,
+    initialPosition: { x: -35, y: 10, scale: 0.9, depth: 0.2 }, // موقعیت نمونه، می‌توانید تغییر دهید
+    unlocked: true,
+    requiresAuth: false, // اگر نیاز به لاگین قبلی داشته باشد، true کنید
   },
   {
     id: "chatbox",
