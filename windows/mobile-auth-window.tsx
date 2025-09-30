@@ -154,7 +154,7 @@ export function MobileAuthWindow({ onContinue }: MobileAuthWindowProps) {
           >
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "تأیید کد"}
           </Button>
-          <Button variant="link" onClick={() => setStep(1)} className="w-full text-[#01ADEF]">
+          <Button variant="ghost" onClick={() => setStep(1)} className="w-full text-[#01ADEF]">
             بازگشت به ورود شماره
           </Button>
         </form>
