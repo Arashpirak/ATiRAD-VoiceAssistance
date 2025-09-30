@@ -222,11 +222,14 @@ function FloatingIcon({
   const clickable = isCurrentLevel
 
   const getIconStyle = () => {
+    // Explicitly type to match PointerEvents (avoids widening to 'string')
+    const pointerEvents: React.CSSProperties["pointerEvents"] = clickable ? "auto" : "none";
+
     const baseStyle = {
       transform: `scale(${scale})`,
       opacity: opacity,
       cursor: clickable ? "pointer" : "default",
-      pointerEvents: clickable ? "auto" : ("none" as const),
+      pointerEvents,  // Use the typed variable here
     }
 
     switch (type) {
